@@ -1,7 +1,22 @@
-import { AfterContentInit, ContentChildren, Directive, EventEmitter, OnChanges, OnDestroy, QueryList, SimpleChanges, Input, Output } from '@angular/core';
+import {
+  AfterContentInit,
+  ContentChildren,
+  Directive,
+  EventEmitter,
+  OnChanges,
+  OnDestroy,
+  QueryList,
+  SimpleChanges,
+  Input,
+  Output
+} from '@angular/core';
 import { Subscription } from 'rxjs';
 
-import { PolyMouseEvent, IconSequence } from '../services/google-maps-types';
+import {
+  PolyMouseEvent,
+  IconSequence,
+  LatLng
+} from '../services/google-maps-types';
 import { PolylineManager } from '../services/managers/polyline-manager';
 import { AgmPolylinePoint } from './polyline-point';
 
@@ -96,12 +111,16 @@ export class AgmPolyline implements OnDestroy, OnChanges, AfterContentInit {
   /**
    * This event is fired when the DOM click event is fired on the Polyline.
    */
-  @Output() lineClick: EventEmitter<PolyMouseEvent> = new EventEmitter<PolyMouseEvent>();
+  @Output() lineClick: EventEmitter<PolyMouseEvent> = new EventEmitter<
+    PolyMouseEvent
+  >();
 
   /**
    * This event is fired when the DOM dblclick event is fired on the Polyline.
    */
-  @Output() lineDblClick: EventEmitter<PolyMouseEvent> = new EventEmitter<PolyMouseEvent>();
+  @Output() lineDblClick: EventEmitter<PolyMouseEvent> = new EventEmitter<
+    PolyMouseEvent
+  >();
 
   /**
    * This event is repeatedly fired while the user drags the polyline.
@@ -111,42 +130,63 @@ export class AgmPolyline implements OnDestroy, OnChanges, AfterContentInit {
   /**
    * This event is fired when the user stops dragging the polyline.
    */
-  @Output() lineDragEnd: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() lineDragEnd: EventEmitter<MouseEvent> = new EventEmitter<
+    MouseEvent
+  >();
 
   /**
    * This event is fired when the user starts dragging the polyline.
    */
-  @Output() lineDragStart: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() lineDragStart: EventEmitter<MouseEvent> = new EventEmitter<
+    MouseEvent
+  >();
 
   /**
    * This event is fired when the DOM mousedown event is fired on the Polyline.
    */
-  @Output() lineMouseDown: EventEmitter<PolyMouseEvent> = new EventEmitter<PolyMouseEvent>();
+  @Output() lineMouseDown: EventEmitter<PolyMouseEvent> = new EventEmitter<
+    PolyMouseEvent
+  >();
 
   /**
    * This event is fired when the DOM mousemove event is fired on the Polyline.
    */
-  @Output() lineMouseMove: EventEmitter<PolyMouseEvent> = new EventEmitter<PolyMouseEvent>();
+  @Output() lineMouseMove: EventEmitter<PolyMouseEvent> = new EventEmitter<
+    PolyMouseEvent
+  >();
 
   /**
    * This event is fired on Polyline mouseout.
    */
-  @Output() lineMouseOut: EventEmitter<PolyMouseEvent> = new EventEmitter<PolyMouseEvent>();
+  @Output() lineMouseOut: EventEmitter<PolyMouseEvent> = new EventEmitter<
+    PolyMouseEvent
+  >();
 
   /**
    * This event is fired on Polyline mouseover.
    */
-  @Output() lineMouseOver: EventEmitter<PolyMouseEvent> = new EventEmitter<PolyMouseEvent>();
+  @Output() lineMouseOver: EventEmitter<PolyMouseEvent> = new EventEmitter<
+    PolyMouseEvent
+  >();
 
   /**
    * This event is fired whe the DOM mouseup event is fired on the Polyline
    */
-  @Output() lineMouseUp: EventEmitter<PolyMouseEvent> = new EventEmitter<PolyMouseEvent>();
+  @Output() lineMouseUp: EventEmitter<PolyMouseEvent> = new EventEmitter<
+    PolyMouseEvent
+  >();
 
   /**
-   * This even is fired when the Polyline is right-clicked on.
+   * This event is fired when the Polyline is right-clicked on.
    */
-  @Output() lineRightClick: EventEmitter<PolyMouseEvent> = new EventEmitter<PolyMouseEvent>();
+  @Output() lineRightClick: EventEmitter<PolyMouseEvent> = new EventEmitter<
+    PolyMouseEvent
+  >();
+
+  /**
+   * This event is fired after Polyline's path changes.
+   */
+  @Output() polyPathChange = new EventEmitter<PathEvent>();
 
   /**
    * @internal
@@ -154,7 +194,13 @@ export class AgmPolyline implements OnDestroy, OnChanges, AfterContentInit {
   @ContentChildren(AgmPolylinePoint) points: QueryList<AgmPolylinePoint>;
 
   private static _polylineOptionsAttributes: Array<string> = [
-    'draggable', 'editable', 'visible', 'geodesic', 'strokeColor', 'strokeOpacity', 'strokeWeight',
+    'draggable',
+    'editable',
+    'visible',
+    'geodesic',
+    'strokeColor',
+    'strokeOpacity',
+    'strokeWeight',
     'zIndex'
   ];
 
@@ -162,21 +208,26 @@ export class AgmPolyline implements OnDestroy, OnChanges, AfterContentInit {
   private _polylineAddedToManager: boolean = false;
   private _subscriptions: Subscription[] = [];
 
-  constructor(private _polylineManager: PolylineManager) { this._id = (polylineId++).toString(); }
+  constructor(private _polylineManager: PolylineManager) {
+    this._id = (polylineId++).toString();
+  }
 
   /** @internal */
   ngAfterContentInit() {
     if (this.points.length) {
       this.points.forEach((point: AgmPolylinePoint) => {
-        const s = point.positionChanged.subscribe(
-            () => { this._polylineManager.updatePolylinePoints(this); });
+        const s = point.positionChanged.subscribe(() => {
+          this._polylineManager.updatePolylinePoints(this);
+        });
         this._subscriptions.push(s);
       });
     }
     if (!this._polylineAddedToManager) {
       this._init();
     }
-    const s = this.points.changes.subscribe(() => this._polylineManager.updatePolylinePoints(this));
+    const s = this.points.changes.subscribe(() =>
+      this._polylineManager.updatePolylinePoints(this)
+    );
     this._subscriptions.push(s);
     this._polylineManager.updatePolylinePoints(this);
   }
@@ -187,11 +238,16 @@ export class AgmPolyline implements OnDestroy, OnChanges, AfterContentInit {
       return;
     }
 
-    let options: {[propName: string]: any} = {};
+    let options: { [propName: string]: any } = {};
     const optionKeys = Object.keys(changes).filter(
-        k => AgmPolyline._polylineOptionsAttributes.indexOf(k) !== -1);
-    optionKeys.forEach(k => options[k] = changes[k].currentValue);
+      k => AgmPolyline._polylineOptionsAttributes.indexOf(k) !== -1
+    );
+    optionKeys.forEach(k => (options[k] = changes[k].currentValue));
     this._polylineManager.setPolylineOptions(this, options);
+  }
+
+  getPath(): Promise<Array<LatLng>> {
+    return this._polylineManager.getPath(this);
   }
 
   private _init() {
@@ -202,20 +258,59 @@ export class AgmPolyline implements OnDestroy, OnChanges, AfterContentInit {
 
   private _addEventListeners() {
     const handlers = [
-      {name: 'click', handler: (ev: PolyMouseEvent) => this.lineClick.emit(ev)},
-      {name: 'dblclick', handler: (ev: PolyMouseEvent) => this.lineDblClick.emit(ev)},
-      {name: 'drag', handler: (ev: MouseEvent) => this.lineDrag.emit(ev)},
-      {name: 'dragend', handler: (ev: MouseEvent) => this.lineDragEnd.emit(ev)},
-      {name: 'dragstart', handler: (ev: MouseEvent) => this.lineDragStart.emit(ev)},
-      {name: 'mousedown', handler: (ev: PolyMouseEvent) => this.lineMouseDown.emit(ev)},
-      {name: 'mousemove', handler: (ev: PolyMouseEvent) => this.lineMouseMove.emit(ev)},
-      {name: 'mouseout', handler: (ev: PolyMouseEvent) => this.lineMouseOut.emit(ev)},
-      {name: 'mouseover', handler: (ev: PolyMouseEvent) => this.lineMouseOver.emit(ev)},
-      {name: 'mouseup', handler: (ev: PolyMouseEvent) => this.lineMouseUp.emit(ev)},
-      {name: 'rightclick', handler: (ev: PolyMouseEvent) => this.lineRightClick.emit(ev)},
+      {
+        name: 'click',
+        handler: (ev: PolyMouseEvent) => this.lineClick.emit(ev)
+      },
+      {
+        name: 'dblclick',
+        handler: (ev: PolyMouseEvent) => this.lineDblClick.emit(ev)
+      },
+      { name: 'drag', handler: (ev: MouseEvent) => this.lineDrag.emit(ev) },
+      {
+        name: 'dragend',
+        handler: (ev: MouseEvent) => this.lineDragEnd.emit(ev)
+      },
+      {
+        name: 'dragstart',
+        handler: (ev: MouseEvent) => this.lineDragStart.emit(ev)
+      },
+      {
+        name: 'mousedown',
+        handler: (ev: PolyMouseEvent) => this.lineMouseDown.emit(ev)
+      },
+      {
+        name: 'mousemove',
+        handler: (ev: PolyMouseEvent) => this.lineMouseMove.emit(ev)
+      },
+      {
+        name: 'mouseout',
+        handler: (ev: PolyMouseEvent) => this.lineMouseOut.emit(ev)
+      },
+      {
+        name: 'mouseover',
+        handler: (ev: PolyMouseEvent) => this.lineMouseOver.emit(ev)
+      },
+      {
+        name: 'mouseup',
+        handler: (ev: PolyMouseEvent) => this.lineMouseUp.emit(ev)
+      },
+      {
+        name: 'rightclick',
+        handler: (ev: PolyMouseEvent) => this.lineRightClick.emit(ev)
+      }
     ];
-    handlers.forEach((obj) => {
-      const os = this._polylineManager.createEventObservable(obj.name, this).subscribe(obj.handler);
+    handlers.forEach(obj => {
+      const os = this._polylineManager
+        .createEventObservable(obj.name, this)
+        .subscribe(obj.handler);
+      this._subscriptions.push(os);
+    });
+
+    this._polylineManager.createPathEventObservable(this).then(ob$ => {
+      const os = ob$.subscribe((pathEvent: any) =>
+        this.polyPathChange.emit(pathEvent)
+      );
       this._subscriptions.push(os);
     });
   }
@@ -229,12 +324,21 @@ export class AgmPolyline implements OnDestroy, OnChanges, AfterContentInit {
   }
 
   /** @internal */
-  id(): string { return this._id; }
+  id(): string {
+    return this._id;
+  }
 
   /** @internal */
   ngOnDestroy() {
     this._polylineManager.deletePolyline(this);
     // unsubscribe all registered observable subscriptions
-    this._subscriptions.forEach((s) => s.unsubscribe());
+    this._subscriptions.forEach(s => s.unsubscribe());
   }
+}
+
+export interface PathEvent {
+  newArr: LatLng[];
+  evName: 'insert_at' | 'remove_at' | 'set_at';
+  index: number;
+  previous?: LatLng;
 }
